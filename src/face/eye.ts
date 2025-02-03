@@ -102,7 +102,7 @@ export default class Eye {
     this.eyeContainer.mask = this.mask;
 
     let eyebrowWidth = opts?.eyebrow?.width ?? 2;
-    let eyebrowCurve = opts?.eyebrow?.curve ?? 0;
+    let eyebrowCurve = opts?.eyebrow?.curve ?? -0.2;
 
     const eyebrow = new PIXI.Graphics()
       .moveTo((-eyebrowWidth / 2) * this.size, 0)

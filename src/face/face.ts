@@ -1,8 +1,11 @@
 import { Application, Graphics, Renderer } from "pixi.js";
 import Eye from "./eye";
+import Mouth from "./mouth";
 
 let leftEye: Eye;
 let rightEye: Eye;
+
+let mouth: Mouth;
 
 export async function createFaceTexture({
   width = 512,
@@ -21,24 +24,25 @@ export async function createFaceTexture({
 
   rightEye = new Eye({
     x: width * 0.5 + 75,
-    y: height * 0.5,
+    y: height * 0.5 + 100,
     size: 50,
   });
 
   leftEye = new Eye({
     x: width * 0.5 - 75,
-    y: height * 0.5,
+    y: height * 0.5 + 100,
     size: 50,
   });
 
   app.stage.addChild(rightEye.container);
   app.stage.addChild(leftEye.container);
 
-  // draw mouth
-  const mouth = new Graphics();
-  mouth.rect(0, 0, 50, 10).fill(0x0);
-  mouth.position.set(width * 0.5 - 25, height * 0.5 - 75);
-  app.stage.addChild(mouth);
+  mouth = new Mouth({
+    x: width * 0.5,
+    y: height * 0.5 - 20,
+    size: 50,
+  });
+  app.stage.addChild(mouth.container);
 
   return {
     app,
