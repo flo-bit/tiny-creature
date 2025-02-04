@@ -1,4 +1,4 @@
-import { Application, type Renderer } from 'pixi.js';
+import { Application, Graphics, type Renderer } from 'pixi.js';
 import Eye from './eye';
 import Mouth from './mouth';
 
@@ -14,24 +14,33 @@ export async function createFaceTexture({
 	width?: number;
 	height?: number;
 }): Promise<{ app: Application<Renderer> }> {
+	const scale = 1.6;
 	const app = new Application();
 
 	await app.init({
 		width,
 		height,
-		background: '#db2777'
+		background: '#ffff00'
 	});
 
+	// add face circle
+	const face = new Graphics();
+	face.circle(0, 0, 140 * scale);
+	face.x = width * 0.5;
+	face.y = height * 0.5 + 30 * scale;
+	face.fill({ color: '#db2777' });
+	app.stage.addChild(face);
+
 	rightEye = new Eye({
-		x: width * 0.5 + 75,
-		y: height * 0.5 + 100,
-		size: 50
+		x: width * 0.5 + 75 * scale,
+		y: height * 0.5 + 50 * scale,
+		size: 50 * scale
 	});
 
 	leftEye = new Eye({
-		x: width * 0.5 - 75,
-		y: height * 0.5 + 100,
-		size: 50
+		x: width * 0.5 - 75 * scale,
+		y: height * 0.5 + 50 * scale,
+		size: 50 * scale
 	});
 
 	app.stage.addChild(rightEye.container);
@@ -39,8 +48,8 @@ export async function createFaceTexture({
 
 	mouth = new Mouth({
 		x: width * 0.5,
-		y: height * 0.5 - 20,
-		size: 50
+		y: height * 0.5 - 70 * scale,
+		size: 50 * scale
 	});
 	app.stage.addChild(mouth.container);
 

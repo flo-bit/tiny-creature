@@ -4,7 +4,7 @@ Command: npx @threlte/gltf@3.0.0 room.glb -t -s
 -->
 
 <script lang="ts">
-  import * as THREE from 'three'
+  import type * as THREE from 'three'
 
   import type { Snippet } from 'svelte'
   import { T, type Props } from '@threlte/core'
@@ -28,7 +28,6 @@ Command: npx @threlte/gltf@3.0.0 room.glb -t -s
       Cube: THREE.Mesh
       couch001: THREE.Mesh
       armchair001: THREE.Mesh
-      chair_C001: THREE.Mesh
       cabinet_medium_decorated001: THREE.Mesh
       table_small001: THREE.Mesh
       lamp_desk001: THREE.Mesh
@@ -38,6 +37,7 @@ Command: npx @threlte/gltf@3.0.0 room.glb -t -s
       pictureframe_medium001: THREE.Mesh
       pictureframe_large_B001: THREE.Mesh
       lamp_standing001: THREE.Mesh
+      lamp_standing002: THREE.Mesh
     }
     materials: {
       furniture_texture: THREE.MeshStandardMaterial
@@ -55,21 +55,36 @@ Command: npx @threlte/gltf@3.0.0 room.glb -t -s
   {#await gltf}
     {@render fallback?.()}
   {:then gltf}
+    <T.PointLight
+      intensity={10}
+      decay={2}
+      position={[2.65, 2.17, -2.57]}
+      rotation={[-Math.PI / 2, 0, 0]}
+      color="#ffaa44"
+    />
+    <T.SpotLight
+      intensity={50}
+      angle={Math.PI / 9}
+      penumbra={0.15}
+      decay={2}
+      position={[2.34, 2.05, 1.93]}
+      rotation={[-1.48, 0.31, 0.07]}
+      color="#ffaa44"
+    />
     <T.Mesh
       castShadow
       receiveShadow
       geometry={gltf.nodes.Cube.geometry}
-      position={[0, 2, 0]}
-      scale={[1, 0.5, 1]}
-    >
-      <T.MeshStandardMaterial side={THREE.DoubleSide} envMapIntensity={0.1} />
-  </T.Mesh>
+      material={gltf.nodes.Cube.material}
+      position={[0, 1.56, 0]}
+      scale={[0.78, 0.39, 0.78]}
+    />
     <T.Mesh
       castShadow
       receiveShadow
       geometry={gltf.nodes.couch001.geometry}
       material={gltf.materials.furniture_texture}
-      position={[3.08, 0, -0.64]}
+      position={[2.33, 0, -0.53]}
       rotation={[0, -1.53, 0]}
     />
     <T.Mesh
@@ -77,37 +92,29 @@ Command: npx @threlte/gltf@3.0.0 room.glb -t -s
       receiveShadow
       geometry={gltf.nodes.armchair001.geometry}
       material={gltf.materials.furniture_texture}
-      position={[1.4, 0, -3.1]}
-      rotation={[0, -0.23, 0]}
-    />
-    <T.Mesh
-      castShadow
-      receiveShadow
-      geometry={gltf.nodes.chair_C001.geometry}
-      material={gltf.materials.furniture_texture}
-      position={[-3.11, 0, -3.01]}
-      rotation={[0, 0.47, 0]}
+      position={[0.51, 0, -2.45]}
+      rotation={[0, 0.32, 0]}
     />
     <T.Mesh
       castShadow
       receiveShadow
       geometry={gltf.nodes.cabinet_medium_decorated001.geometry}
       material={gltf.materials.furniture_texture}
-      position={[-1.02, 0, -3.56]}
+      position={[-1.85, 0, -2.7]}
     />
     <T.Mesh
       castShadow
       receiveShadow
       geometry={gltf.nodes.table_small001.geometry}
       material={gltf.materials.furniture_texture}
-      position={[3.2, 0, 1.64]}
+      position={[2.72, 0, 2.01]}
     />
     <T.Mesh
       castShadow
       receiveShadow
       geometry={gltf.nodes.lamp_desk001.geometry}
       material={gltf.materials.furniture_texture}
-      position={[3.13, 0.97, 1.67]}
+      position={[2.65, 0.97, 2.04]}
       rotation={[Math.PI, -1.17, Math.PI]}
     />
     <T.Mesh
@@ -115,7 +122,7 @@ Command: npx @threlte/gltf@3.0.0 room.glb -t -s
       receiveShadow
       geometry={gltf.nodes.rug_rectangle_stripes_A001.geometry}
       material={gltf.materials.furniture_texture}
-      position={[-0.64, 0, 1.37]}
+      position={[-0.87, 0, 1.06]}
       rotation={[0, -0.64, 0]}
     />
     <T.Mesh
@@ -123,7 +130,7 @@ Command: npx @threlte/gltf@3.0.0 room.glb -t -s
       receiveShadow
       geometry={gltf.nodes.shelf_B_small_decorated001.geometry}
       material={gltf.materials.furniture_texture}
-      position={[4, 2.25, 2.73]}
+      position={[3.14, 2.25, 2.35]}
       rotation={[0, -Math.PI / 2, 0]}
     />
     <T.Mesh
@@ -131,21 +138,21 @@ Command: npx @threlte/gltf@3.0.0 room.glb -t -s
       receiveShadow
       geometry={gltf.nodes.pictureframe_large_A001.geometry}
       material={gltf.materials.furniture_texture}
-      position={[-2.61, 2.38, -4.02]}
+      position={[-2.49, 2.38, -3.14]}
     />
     <T.Mesh
       castShadow
       receiveShadow
       geometry={gltf.nodes.pictureframe_medium001.geometry}
       material={gltf.materials.furniture_texture}
-      position={[-1.28, 2.57, -4.03]}
+      position={[-1.15, 2.57, -3.13]}
     />
     <T.Mesh
       castShadow
       receiveShadow
       geometry={gltf.nodes.pictureframe_large_B001.geometry}
       material={gltf.materials.furniture_texture}
-      position={[4, 2.77, -0.17]}
+      position={[3.12, 2.41, -0.07]}
       rotation={[0, -Math.PI / 2, 0]}
     />
     <T.Mesh
@@ -153,7 +160,17 @@ Command: npx @threlte/gltf@3.0.0 room.glb -t -s
       receiveShadow
       geometry={gltf.nodes.lamp_standing001.geometry}
       material={gltf.materials.furniture_texture}
-      position={[3.22, 0, -3.24]}
+      position={[2.64, 0, -2.58]}
+    />
+    <T.Mesh
+      castShadow
+      receiveShadow
+      geometry={gltf.nodes.lamp_standing002.geometry}
+      material={gltf.materials.furniture_texture.clone()}
+      position={[2.64, 0, -2.58]}
+      material.color="#ffaa44"
+      material.emissive="#ffaa44"
+      material.emissiveIntensity={3}
     />
   {:catch err}
     {@render error?.({ error: err })}
