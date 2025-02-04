@@ -15,8 +15,8 @@
 		  forceWebGL: false
 		})
 	  }}>
-		<Studio>
+		<!-- <Studio> -->
 			<Scene />
-		</Studio>
+		<!-- </Studio> -->
 	</Canvas>
 </div>
