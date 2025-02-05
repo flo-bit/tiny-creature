@@ -7,6 +7,15 @@ let rightEye: Eye;
 
 let mouth: Mouth;
 
+const mouthSettings = {
+	x: 0,
+	y: -130,
+	stroke: 20,
+	color: 0,
+	width: 100,
+	curve: -40
+};
+
 export async function createFaceTexture({
 	width = 512,
 	height = 512
@@ -15,7 +24,7 @@ export async function createFaceTexture({
 	height?: number;
 }): Promise<{ app: Application<Renderer> }> {
 	const xScale = 0.4;
-	const yScale = 1.7;
+	const yScale = 1.5;
 	const app = new Application();
 
 	await app.init({
@@ -45,11 +54,7 @@ export async function createFaceTexture({
 	container.addChild(rightEye.container);
 	container.addChild(leftEye.container);
 
-	mouth = new Mouth({
-		x: 0,
-		y: -130,
-		size: 50
-	});
+	mouth = new Mouth(mouthSettings);
 	container.addChild(mouth.container);
 
 	return {
@@ -65,13 +70,14 @@ export async function createFurTexture({
 	height?: number;
 }): Promise<{ app: Application<Renderer> }> {
 	const xScale = 0.4;
-	const yScale = 1.45;
+	const yScale = 1.5;
 	const app = new Application();
 
 	await app.init({
 		width,
 		height,
-		backgroundAlpha: 0.0
+		backgroundAlpha: 0.0,
+		antialias: true
 	});
 
 	const container = new Container();
@@ -83,8 +89,28 @@ export async function createFurTexture({
 	const background = new Graphics();
 	background.rect(0, 0, width * 5, height * 5);
 	background.pivot.set(width * 2.5, height * 2.5);
-	background.fill({ color: '#000000' });
+	background.fill({ color: 'black' });
 	container.addChild(background);
+
+	// draw 50 random colored circles in random positions
+	// for (let i = 0; i < 500; i++) {
+	// 	const circle = new Graphics();
+	// 	circle.circle(0, 0, 1 + Math.random() * 20 + 10);
+	// 	circle.x = (Math.random() * width * 0.8 - width * 0.4) / xScale;
+	// 	circle.y = (Math.random() * height * 0.4 - height * 0.2) / yScale;
+
+	// 	// if (Math.hypot(circle.x, circle.y) < 150) continue;
+
+	// 	circle.fill({
+	// 		color: {
+	// 			r: Math.random() * 256,
+	// 			g: Math.random() * 256,
+	// 			b: Math.random() * 256,
+	// 			a: Math.random()
+	// 		}
+	// 	});
+	// 	container.addChild(circle);
+	// }
 
 	// add circle mask
 	const circleMask = new Graphics();
@@ -94,19 +120,18 @@ export async function createFurTexture({
 	circleMask.fill({ color: '#ffffff' });
 	container.addChild(circleMask);
 
-	// for (let i = 0; i < 21; i++) {
-	// 	// add circle
-	// 	const circle = new Graphics();
-	// 	circle.circle(0, 0, 3 * i + 40);
-	// 	// more and more green
-	// 	circle.stroke({ color: { r: 0, g: 0, b: 0, a: i / 20 }, width: 3 });
-	// 	container.addChild(circle);
-	// }
+	for (let i = 0; i < 21; i++) {
+		// add circle
+		const circle = new Graphics();
+		circle.circle(0, 0, 5 * i - 2.5);
+		circle.stroke({ color: { r: 0, g: 0, b: 0, a: Math.pow(i / 21, 10) + 0.7 }, width: 5 });
+		container.addChild(circle);
+	}
 
-	const circle = new Graphics();
-	circle.circle(0, 0, 100);
-	circle.fill({ color: { r: 0, g: 0, b: 0, a: 0.65 } });
-	container.addChild(circle);
+	// const circle = new Graphics();
+	// circle.circle(0, 0, 100);
+	// circle.fill({ color: { r: 256, g: 256, b: 256, a: 0.65 } });
+	// container.addChild(circle);
 
 	const eyeMaskLeft = new Graphics();
 	eyeMaskLeft.circle(0, 0, 25);
@@ -123,6 +148,34 @@ export async function createFurTexture({
 	eyeMaskRight.blendMode = 'erase';
 	eyeMaskRight.fill({ color: '#ffffff' });
 	container.addChild(eyeMaskRight);
+
+	const eyebrowLeft = new Mouth({
+		x: 75 / 2,
+		y: 40,
+		width: 50,
+		curve: 10,
+		stroke: 10
+	});
+	eyebrowLeft.container.alpha = 0.5;
+	container.addChild(eyebrowLeft.container);
+
+	const eyebrowRight = new Mouth({
+		x: -75 / 2,
+		y: 40,
+		width: 50,
+		curve: 10,
+		stroke: 10
+	});
+	eyebrowRight.container.alpha = 0.5;
+	container.addChild(eyebrowRight.container);
+
+	const mouth3 = new Mouth({
+		...mouthSettings,
+		scale: 0.5
+	});
+	// mouth3.container.alpha = 0.5;
+	mouth3.container.blendMode = 'erase';
+	container.addChild(mouth3.container);
 
 	return {
 		app

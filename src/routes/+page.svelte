@@ -7,7 +7,7 @@
 
 </script>
 
-<div class="h-screen w-screen">
+<div class="h-screen w-screen bg-gradient-to-t from-stone-950 to-stone-900/50">
 	<Canvas   createRenderer={(canvas) => {
 		return new WebGPURenderer({
 		  canvas,

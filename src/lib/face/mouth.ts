@@ -1,90 +1,54 @@
-import * as PIXI from "pixi.js";
-import { AnimatedValue, degreesToRadians } from "./math-helper";
+import * as PIXI from 'pixi.js';
 
 export type EyeOptions = {
-  container: PIXI.Container;
+	container: PIXI.Container;
 
-  x: number;
-  y: number;
+	scale: number;
 
-  eyeColor: PIXI.ColorSource;
-  pupilColor: PIXI.ColorSource;
-  highlightColor: PIXI.ColorSource;
+	stroke: number;
 
-  size: number;
+	width: number;
 
-  eyebrow: Partial<{
-    length: number;
+	curve: number;
 
-    width: number;
+	color: PIXI.ColorSource;
 
-    y: number;
-    x: number;
-
-    curve: number;
-
-    color: PIXI.ColorSource;
-  }>;
-
-  blinkStart: number;
-  blinkTimer: number;
+	x: number;
+	y: number;
 };
 
 export default class Mouth {
-  eyeContainer: PIXI.Container;
+	container: PIXI.Container;
 
-  container: PIXI.Container;
+	scale: number = 1;
 
-  base?: PIXI.Graphics;
+	x: number = 0;
+	y: number = 0;
 
-  _x: AnimatedValue;
-  _y: AnimatedValue;
+	constructor(opts: Partial<EyeOptions>) {
+		this.container = new PIXI.Container();
 
-  dx: number = 0;
-  dy: number = 0;
+		this.scale = opts?.scale ?? 1;
 
-  size: number = 1;
+		this.x = opts?.x ?? 0;
+		this.y = opts?.y ?? 0;
 
-  targetX: number = 0;
-  targetY: number = 0;
+		if (opts.container) opts.container.addChild(this.container);
 
-  constructor(opts: Partial<EyeOptions>) {
-    console.log("Eye", opts);
-    this.container = new PIXI.Container();
+		const width = opts?.width ?? 50;
+		const curve = opts?.curve ?? 10;
 
-    this.eyeContainer = new PIXI.Container();
+		const eyebrow = new PIXI.Graphics()
+			.moveTo((-width / 2) * this.scale, 0)
+			.quadraticCurveTo(0, curve * this.scale, (width / 2) * this.scale, 0)
+			.stroke({
+				color: opts?.color ?? 0x101010,
+				width: (opts?.stroke ?? 5) * this.scale,
+				cap: 'round'
+			});
 
-    this.container.position.set(opts.x ?? 0, opts.y ?? 0);
+		eyebrow.position.set(this.x * this.scale, this.y * this.scale);
 
-    this.size = opts.size ?? 1;
-
-    this._x = new AnimatedValue();
-    this._y = new AnimatedValue();
-
-    this.container.addChild(this.eyeContainer);
-
-    if (opts.container) opts.container.addChild(this.container);
-
-    let eyebrowWidth = opts?.eyebrow?.width ?? 2;
-    let eyebrowCurve = opts?.eyebrow?.curve ?? -0.3;
-
-    const eyebrow = new PIXI.Graphics()
-      .moveTo((-eyebrowWidth / 2) * this.size, 0)
-      .quadraticCurveTo(
-        0,
-        eyebrowCurve * this.size,
-        (eyebrowWidth / 2) * this.size,
-        0,
-      )
-      .stroke({
-        color: opts.eyebrow?.color ?? 0,
-        width: opts.eyebrow?.width ?? this.size * 0.2,
-      });
-    eyebrow.position.set(
-      opts.eyebrow?.x ?? 0,
-      (opts.eyebrow?.y ?? 0.9) * this.size,
-    );
-
-    this.container.addChild(eyebrow);
-  }
+		this.container.addChild(eyebrow);
+	}
 }
