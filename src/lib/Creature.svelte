@@ -4,39 +4,58 @@
 	// @ts-ignore
 	import { WiggleBone } from 'wiggle';
 	import { onMount } from 'svelte';
-	import { createFaceTexture, createFurTexture, updateFace } from './face/face';
-	import { T, useTask } from '@threlte/core';
-
-	let rootBone: THREE.Bone;
-	const wiggleBones: WiggleBone[] = [];
-	let creature: THREE.Group;
-
-	let canvasTexture: THREE.CanvasTexture;
-	let furTexture: THREE.CanvasTexture;
-
+	import { createFaceTexture, createFurTexture, updateBackground, updateFace } from './face/face';
+	import { T, useTask, useThrelte } from '@threlte/core';
 	import {
+		add,
 		color,
 		float,
 		Fn,
+		hash,
 		mix,
+		mul,
 		mx_noise_float,
 		normalGeometry,
 		positionGeometry,
 		select,
 		texture,
-		vec3
+		transformedNormalView,
+		uniform,
+		vec2,
+		vec3,
+		vec4
 	} from 'three/tsl';
+	import { colors } from './state.svelte';
+
+	let rootBone: THREE.Bone;
+	const wiggleBones: WiggleBone[] = [];
+	let creature: THREE.Group | null = $state(null);
+
+	let canvasTexture: THREE.CanvasTexture;
+	let furTexture: THREE.CanvasTexture;
+
+	const { canvas } = useThrelte();
+
+	let mouse = new THREE.Vector2();
 
 	function jump() {
 		ySpeed = 5;
 	}
 
+	let primaryColors = [];
+	let secondaryColors = [];
+
 	onMount(async () => {
+		// add mouse movement
+		canvas.addEventListener('mousemove', (event) => {
+			mouse.set(event.clientX / window.innerWidth, event.clientY / window.innerHeight);
+		});
+
 		// jump on touch, click and space
-		window.addEventListener('touchstart', (event) => {
+		canvas.addEventListener('touchstart', (event) => {
 			jump();
 		});
-		window.addEventListener('click', (event) => {
+		canvas.addEventListener('click', (event) => {
 			jump();
 		});
 		window.addEventListener('keydown', (event) => {
@@ -73,9 +92,7 @@
 			if (!(mesh instanceof THREE.SkinnedMesh)) return;
 
 			// add face and fur
-			const material = new THREE.MeshStandardNodeMaterial({
-				roughness: 0.5
-			});
+			const material = new THREE.MeshStandardNodeMaterial();
 			material.colorNode = texture(canvasTexture);
 
 			material.bumpMap = canvasTexture;
@@ -84,52 +101,64 @@
 
 			const furMeshes = [];
 
-			let total = 16;
+			let total = 12;
 			for (let i = 0; i < total; i++) {
 				const material = new THREE.MeshStandardNodeMaterial({
 					transparent: true,
-					opacity: 1,
-					side: THREE.DoubleSide
+					opacity: 1
 				});
 
+				// move vertices along normal to make each shell slightly bigger than the last
 				material.positionNode = positionGeometry
-					.add(normalGeometry.mul(i * 0.007))
+					.add(normalGeometry.mul(i * 0.01))
+					// simulate some gravity
 					.add(vec3(0, -0.002, 0).mul(i));
 
-				material.colorNode = Fn(() => {
-					const t = texture(furTexture).toVar();
+				const primaryColor = uniform(new THREE.Color(colors.primary));
+				const secondaryColor = uniform(new THREE.Color(colors.secondary));
 
+				primaryColors.push(primaryColor);
+				secondaryColors.push(secondaryColor);
+
+				material.colorNode = Fn(() => {
+					const t = texture(furTexture);
+
+					// noise color
 					const c = mix(
-						color(0xec4899),
-						color(0xfb923c),
+						color(primaryColor),
+						color(secondaryColor),
 						mx_noise_float(positionGeometry.mul(10).mul(0.5).add(0.5))
 					);
+					// const c = color(0xec4899);
 
-					const s = select(t.g.lessThan(0.01).and(t.b.lessThan(0.01)), c, t.rgb);
+					// how much fur is there
+					const a = t.a;
 
-					return s.mul(
+					// if fur texture is black, use noise color
+					// make lower layers darker
+					const s = select(t.rgb.lengthSq().lessThan(0.00001), c, t).mul(
 						float(i / total)
-							.add(t.a.mul(-1).add(1))
+							.add(a.mul(-1).add(1))
 							.mul(0.8)
 							.add(0.2)
 					);
-				})();
 
-				material.alphaTestNode = float(0.5);
-
-				material.opacityNode = Fn(() => {
-					const t = texture(furTexture).toVar();
-
-					return select(
-						mx_noise_float(positionGeometry.mul(float(200).add(t.a.mul(-100)))).greaterThan(
-							float((i / total) * 2 - 1).add(t.a.mul(-2).add(2))
+					// make more parts of the upper layers transparent
+					const opacity = select(
+						mx_noise_float(positionGeometry.mul(float(200).add(a.mul(-100)))).greaterThan(
+							float((i / total) * 2 - 1).add(a.mul(-2).add(2))
 						),
 						1.0,
 						0.0
 					);
+
+					return vec4(s.rgb, opacity);
 				})();
 
+				material.alphaTestNode = float(0.9);
+
 				const fur = mesh.clone();
+				fur.name = `fur-${i}`;
 				fur.material = material;
 
 				furMeshes.push(fur);
@@ -152,8 +181,12 @@
 	});
 
 	let total = 0;
-
 	let ySpeed = 0;
+
+	let lastColors = {
+		primary: colors.primary.toLowerCase(),
+		secondary: colors.secondary.toLowerCase()
+	};
 
 	useTask((dt) => {
 		total += dt;
@@ -162,7 +195,7 @@
 		});
 
 		if (canvasTexture) {
-			updateFace(dt, 0, 0);
+			updateFace(dt, (mouse.x - 0.5) * 2, -(mouse.y - 0.5) * 2);
 			canvasTexture.needsUpdate = true;
 		}
 
@@ -178,7 +211,23 @@
 
 			ySpeed -= 10 * dt;
 		}
+
+		if (
+			lastColors.primary !== colors.primary.toLowerCase() ||
+			lastColors.secondary !== colors.secondary.toLowerCase()
+		) {
+			updateBackground(colors.primary);
+
+			primaryColors.forEach((primaryColor) => {
+				primaryColor.value = new THREE.Color(colors.primary);
+			});
+
+			secondaryColors.forEach((secondaryColor) => {
+				secondaryColor.value = new THREE.Color(colors.secondary);
+			});
+		}
 	});
+
 </script>
 
 {#if creature}

@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { AnimatedValue, degreesToRadians } from "./math-helper";
+import { AnimatedProperty, degreesToRadians } from './math-helper';
 
 export type EyeOptions = {
   container: PIXI.Container;
@@ -31,34 +31,34 @@ export type EyeOptions = {
 };
 
 export default class Eye {
-  eyeContainer: PIXI.Container;
+	eyeContainer: PIXI.Container;
 
-  container: PIXI.Container;
+	container: PIXI.Container;
 
-  base?: PIXI.Graphics;
-  pupil?: PIXI.Graphics;
-  highlight?: PIXI.Sprite;
+	base?: PIXI.Graphics;
+	pupil?: PIXI.Graphics;
+	highlight?: PIXI.Sprite;
 
-  mask?: PIXI.Graphics;
+	mask?: PIXI.Graphics;
 
-  // how long one blink takes, split into four parts [close animation, closed, open animation, open]
-  blinkSpeed: [number, number, number, number] = [0.05, 0.1, 0.1, 1];
+	// how long one blink takes, split into four parts [close animation, closed, open animation, open]
+	blinkSpeed: [number, number, number, number] = [0.05, 0.1, 0.1, 1];
 
-  private blinkTimer: number = 0;
-  private blinkState: number = 3;
+	private blinkTimer: number = 0;
+	private blinkState: number = 3;
 
-  _x: AnimatedValue;
-  _y: AnimatedValue;
+	_x: AnimatedProperty;
+	_y: AnimatedProperty;
 
-  dx: number = 0;
-  dy: number = 0;
+	dx: number = 0;
+	dy: number = 0;
 
-  size: number = 1;
+	size: number = 1;
 
-  targetX: number = 0;
-  targetY: number = 0;
+	targetX: number = 0;
+	targetY: number = 0;
 
-  constructor(opts: Partial<EyeOptions>) {
+	constructor(opts: Partial<EyeOptions>) {
 		console.log('Eye', opts);
 		this.container = new PIXI.Container();
 
@@ -75,8 +75,8 @@ export default class Eye {
 			this.blinkTimer = opts.blinkTimer;
 		}
 
-		this._x = new AnimatedValue();
-		this._y = new AnimatedValue();
+		this._x = new AnimatedProperty();
+		this._y = new AnimatedProperty();
 
 		this.container.addChild(this.eyeContainer);
 
@@ -114,60 +114,57 @@ export default class Eye {
 		// this.container.addChild(eyebrow);
 	}
 
-  lookInDirection(direction: number) {
-    const angle = degreesToRadians(direction);
+	lookInDirection(direction: number) {
+		const angle = degreesToRadians(direction);
 
-    this.lookAt(Math.cos(angle), Math.sin(angle));
-  }
+		this.lookAt(Math.cos(angle), Math.sin(angle));
+	}
 
-  lookAt(x: number, y: number) {
-    this._x.value = x * this.size * 0.3;
-    this._y.value = y * this.size * 0.3;
-  }
+	lookAt(x: number, y: number) {
+		this._x.set(x * this.size * 0.3);
+		this._y.set(y * this.size * 0.3);
+	}
 
-  rotate(angle: number) {
-    // get current angle
-    let currentAngle = Math.atan2(this._y.value, this._x.value);
+	rotate(angle: number) {
+		// get current angle
+		const currentAngle = Math.atan2(this._y.value, this._x.value);
 
-    let moveAngle = degreesToRadians(angle);
+		const moveAngle = degreesToRadians(angle);
 
-    this.lookAt(
-      Math.cos(currentAngle + moveAngle),
-      Math.sin(currentAngle + moveAngle),
-    );
-  }
+		this.lookAt(Math.cos(currentAngle + moveAngle), Math.sin(currentAngle + moveAngle));
+	}
 
-  update(deltaTime: number) {
-    let updateX = this._x.update(deltaTime);
-    let updateY = this._y.update(deltaTime);
-    if (updateX || updateY) {
-      this.pupil?.position.set(this._x.value, this._y.value);
-    }
+	update(deltaTime: number) {
+		const updateX = this._x.update(deltaTime);
+		const updateY = this._y.update(deltaTime);
+		if (updateX || updateY) {
+			this.pupil?.position.set(this._x.value, this._y.value);
+		}
 
-    if (this.mask) {
-      // Blink animation
-      this.blinkTimer += deltaTime;
+		if (this.mask) {
+			// Blink animation
+			this.blinkTimer += deltaTime;
 
-      if (this.blinkTimer >= this.blinkSpeed[this.blinkState]) {
-        this.blinkTimer = 0;
-        this.blinkState = (this.blinkState + 1) % 4;
-      }
+			if (this.blinkTimer >= this.blinkSpeed[this.blinkState]) {
+				this.blinkTimer = 0;
+				this.blinkState = (this.blinkState + 1) % 4;
+			}
 
-      let scale: number;
-      switch (this.blinkState) {
-        case 0: // Closing
-          scale = 1 - this.blinkTimer / this.blinkSpeed[0];
-          break;
-        case 1: // Closed
-          scale = 0;
-          break;
-        case 2: // Opening
-          scale = this.blinkTimer / this.blinkSpeed[2];
-          break;
-        default: // Open
-          scale = 1;
-      }
-      this.mask.scale.y = scale;
-    }
-  }
+			let scale: number;
+			switch (this.blinkState) {
+				case 0: // Closing
+					scale = 1 - this.blinkTimer / this.blinkSpeed[0];
+					break;
+				case 1: // Closed
+					scale = 0;
+					break;
+				case 2: // Opening
+					scale = this.blinkTimer / this.blinkSpeed[2];
+					break;
+				default: // Open
+					scale = 1;
+			}
+			this.mask.scale.y = scale;
+		}
+	}
 }

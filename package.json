@@ -44,7 +44,9 @@
 		"@types/three": "^0.173.0",
 		"pixi.js": "^8.7.3",
 		"stats.js": "^0.17.0",
+		"svelte-tweakpane-ui": "^1.5.2",
 		"three": "^0.173.0",
+		"three-shader-baker": "^1.0.8",
 		"wiggle": "^0.0.17"
 	}
 }

@@ -11,12 +11,8 @@
  *                          from the source to the target.
  * @returns {number} The value in between source and target, depending on the amount.
  */
-export function smoothStep(
-  source: number,
-  target: number,
-  amount: number,
-): number {
-  return source * (1 - amount) + target * amount;
+export function smoothStep(source: number, target: number, amount: number): number {
+	return source * (1 - amount) + target * amount;
 }
 
 /**
@@ -43,19 +39,19 @@ export function smoothStep(
  * @returns {number} The value in between source and target, adjusted for framerate.
  */
 export function framerateIndependentSmoothStep(
-  source: number,
-  target: number,
-  rate: number,
-  frameDelta: number,
-  targetFps = 60,
+	source: number,
+	target: number,
+	rate: number,
+	frameDelta: number,
+	targetFps = 60
 ): number {
-  if (typeof frameDelta === "undefined") {
-    return smoothStep(source, target, rate);
-  }
+	if (typeof frameDelta === 'undefined') {
+		return smoothStep(source, target, rate);
+	}
 
-  const relativeDelta = frameDelta / (1 / targetFps);
-  const smoothing = 1 - rate;
-  return smoothStep(source, target, 1 - Math.pow(smoothing, relativeDelta));
+	const relativeDelta = frameDelta / (1 / targetFps);
+	const smoothing = 1 - rate;
+	return smoothStep(source, target, 1 - Math.pow(smoothing, relativeDelta));
 }
 
 /**
@@ -65,7 +61,7 @@ export function framerateIndependentSmoothStep(
  * @returns {number} The angle in radians.
  */
 export function degreesToRadians(degrees: number): number {
-  return degrees * (Math.PI / 180);
+	return degrees * (Math.PI / 180);
 }
 
 /**
@@ -75,7 +71,7 @@ export function degreesToRadians(degrees: number): number {
  * @returns {number} The angle in degrees.
  */
 export function radiansToDegrees(radians: number): number {
-  return radians * (180 / Math.PI);
+	return radians * (180 / Math.PI);
 }
 
 /**
@@ -91,7 +87,7 @@ export function radiansToDegrees(radians: number): number {
  * @returns {number} The number, but kept within the specified range.
  */
 export function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
+	return Math.max(min, Math.min(max, value));
 }
 
 /**
@@ -107,7 +103,7 @@ export function clamp(value: number, min: number, max: number): number {
  * @returns {number} The wrapped number within the range.
  */
 export function wrap(value: number, min: number, max: number): number {
-  return ((value - min) % (max - min)) + min;
+	return ((value - min) % (max - min)) + min;
 }
 
 /**
@@ -125,56 +121,86 @@ export function wrap(value: number, min: number, max: number): number {
  * @param {number} outMax - The end of the new range.
  * @returns {number} The number converted to the new range.
  */
-export function map(
-  value: number,
-  inMin: number,
-  inMax: number,
-  outMin: number,
-  outMax: number,
-): number {
-  return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+export function map(value: number, inMin: number, inMax: number, outMin: number, outMax: number): number {
+	return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
 }
 
-const epsilon = 0.001;
+const epsilon = 0.00001;
 
-export class AnimatedValue {
-  _value: number;
-  _target: number;
+export class AnimatedProperty {
+	_value: number;
+	_target: number;
 
-  rate: number;
+	rate: number;
 
-  needsUpdate: boolean = false;
+	needsUpdate: boolean = false;
 
-  constructor(opts?: { value: number; rate: number }) {
-    this._value = opts?.value ?? 0;
-    this._target = opts?.value ?? 0;
-    this.rate = opts?.rate ?? 0.1;
-  }
+	constructor(value: number = 0, rate: number = 0.1) {
+		this._value = value;
+		this._target = value;
+		this.rate = rate;
+	}
 
-  get value() {
-    return this._value;
-  }
+	setInstantly(value: number) {
+		this._value = value;
+		this.needsUpdate = true;
+	}
 
-  set value(value: number) {
-    this._target = value;
-    this.needsUpdate = true;
-  }
+	get value() {
+		return this._value;
+	}
 
-  update(dt: number) {
-    if (!this.needsUpdate) return false;
+	set target(value: number) {
+		this._target = value;
+		this.needsUpdate = true;
+	}
 
-    this._value = framerateIndependentSmoothStep(
-      this._value,
-      this._target,
-      this.rate,
-      dt,
-    );
+	set(target: number) {
+		this._target = target;
+		this.needsUpdate = true;
+	}
 
-    if (Math.abs(this._value - this._target) > epsilon) {
-      this.needsUpdate = true;
-    } else {
-      this.needsUpdate = false;
-    }
-    return true;
-  }
+	get(): number {
+		return this._value;
+	}
+
+	update(dt: number) {
+		if (!this.needsUpdate) return false;
+
+		this._value = framerateIndependentSmoothStep(this._value, this._target, this.rate, dt);
+		this.needsUpdate = Math.abs(this._value - this._target) > epsilon;
+
+		return true;
+	}
+}
+
+export class AnimatedProperties<T extends Record<string, number>> {
+	private readonly properties: { [K in keyof T]: AnimatedProperty };
+
+	constructor(initialValues: T, defaultRate: number = 0.1) {
+		this.properties = {} as { [K in keyof T]: AnimatedProperty };
+		for (const key in initialValues) {
+			this.properties[key] = new AnimatedProperty(initialValues[key], defaultRate);
+		}
+	}
+
+	// Get the property directly via dot notation
+	get<K extends keyof T>(key: K): number {
+		return this.properties[key].get();
+	}
+
+	set<K extends keyof T>(key: K, value: number) {
+		this.properties[key].set(value);
+	}
+
+	// Update all animated values
+	update(dt: number): boolean {
+		let anyUpdated = false;
+		for (const key in this.properties) {
+			if (this.properties[key].update(dt)) {
+				anyUpdated = true;
+			}
+		}
+		return anyUpdated;
+	}
 }

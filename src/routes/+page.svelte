@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { Canvas } from '@threlte/core';
 	import Scene from '$lib/Scene.svelte';
-	import { Studio } from '@threlte/studio';
 	import { WebGPURenderer } from 'three/webgpu'
-	import { PerfMonitor } from '@threlte/extras';
+	import Pane from '$lib/Pane.svelte';
 
 </script>
 
 <div class="h-screen w-screen bg-gradient-to-t from-stone-950 to-stone-900/50">
-	<Canvas   createRenderer={(canvas) => {
+	<Canvas createRenderer={(canvas) => {
 		return new WebGPURenderer({
 		  canvas,
 		  antialias: true,
@@ -20,3 +19,6 @@
 		<!-- </Studio> -->
 	</Canvas>
 </div>
+
+
+<Pane />

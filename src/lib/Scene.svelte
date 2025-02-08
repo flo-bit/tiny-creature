@@ -13,7 +13,7 @@
 
 	onMount(() => {
 		renderer.toneMapping = ACESFilmicToneMapping;
-		renderer.toneMappingExposure = 0.4;
+		renderer.toneMappingExposure = 0.3;
 
 		stats.showPanel(0);
 		document.body.appendChild(stats.dom);
@@ -44,3 +44,5 @@
 <Creature />
 
 <Environment isBackground={false} url={'/tiny-creature/workshop.hdr'} />
+
+<T.DirectionalLight position={[0, 10, 10]} intensity={1} />

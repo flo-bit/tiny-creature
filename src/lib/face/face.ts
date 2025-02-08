@@ -1,11 +1,17 @@
 import { Application, Container, Graphics, type Renderer } from 'pixi.js';
 import Eye from './eye';
-import Mouth from './mouth';
+import Curve from './curve';
 
 let leftEye: Eye;
 let rightEye: Eye;
 
-let mouth: Mouth;
+let mouth: Curve;
+let furMouth: Curve;
+
+let eyebrowLeft: Curve;
+let eyebrowRight: Curve;
+
+let background: Graphics;
 
 const mouthSettings = {
 	x: 0,
@@ -16,13 +22,21 @@ const mouthSettings = {
 	curve: -40
 };
 
+const size = {
+	width: 512,
+	height: 512
+};
+
 export async function createFaceTexture({
-	width = 512,
-	height = 512
+	width = size.width,
+	height = size.height
 }: {
 	width?: number;
 	height?: number;
 }): Promise<{ app: Application<Renderer> }> {
+	size.width = width;
+	size.height = height;
+
 	const xScale = 0.4;
 	const yScale = 1.5;
 	const app = new Application();
@@ -30,8 +44,14 @@ export async function createFaceTexture({
 	await app.init({
 		width,
 		height,
-		background: '#be185d'
+		background: 'black'
 	});
+
+	background = new Graphics();
+	background.rect(0, 0, width, height);
+	background.fill({ color: '#be185d' });
+	background.alpha = 0.7;
+	app.stage.addChild(background);
 
 	const container = new Container();
 	container.x = width * 0.5;
@@ -54,8 +74,8 @@ export async function createFaceTexture({
 	container.addChild(rightEye.container);
 	container.addChild(leftEye.container);
 
-	mouth = new Mouth(mouthSettings);
-	container.addChild(mouth.container);
+	mouth = new Curve(mouthSettings);
+	container.addChild(mouth.graphics);
 
 	return {
 		app
@@ -149,42 +169,56 @@ export async function createFurTexture({
 	eyeMaskRight.fill({ color: '#ffffff' });
 	container.addChild(eyeMaskRight);
 
-	const eyebrowLeft = new Mouth({
+	eyebrowLeft = new Curve({
 		x: 75 / 2,
 		y: 40,
 		width: 50,
 		curve: 10,
 		stroke: 10
 	});
-	eyebrowLeft.container.alpha = 0.5;
-	container.addChild(eyebrowLeft.container);
+	eyebrowLeft.graphics.alpha = 0.5;
+	container.addChild(eyebrowLeft.graphics);
 
-	const eyebrowRight = new Mouth({
+	eyebrowRight = new Curve({
 		x: -75 / 2,
 		y: 40,
 		width: 50,
 		curve: 10,
 		stroke: 10
 	});
-	eyebrowRight.container.alpha = 0.5;
-	container.addChild(eyebrowRight.container);
+	eyebrowRight.graphics.alpha = 0.5;
+	container.addChild(eyebrowRight.graphics);
 
-	const mouth3 = new Mouth({
+	furMouth = new Curve({
 		...mouthSettings,
 		scale: 0.5
 	});
-	// mouth3.container.alpha = 0.5;
-	mouth3.container.blendMode = 'erase';
-	container.addChild(mouth3.container);
+
+	furMouth.graphics.blendMode = 'erase';
+	container.addChild(furMouth.graphics);
 
 	return {
 		app
 	};
 }
 
+export { leftEye, rightEye, mouth, eyebrowLeft, eyebrowRight, furMouth };
+
+export function updateBackground(color: string) {
+	background.clear();
+	background.rect(0, 0, size.width, size.height);
+	background.fill({ color });
+}
+
 export function updateFace(dt: number, x: number, y: number) {
 	leftEye?.lookAt(x, y);
 	rightEye?.lookAt(x, y);
+
+	eyebrowLeft?.update(dt);
+	eyebrowRight?.update(dt);
+
+	mouth?.update(dt);
+	furMouth?.update(dt);
 
 	leftEye?.update(dt);
 	rightEye?.update(dt);
