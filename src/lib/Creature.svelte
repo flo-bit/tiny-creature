@@ -166,15 +166,13 @@
 	onMount(async () => {
 		addEventListeners();
 
-		let texturePromise = createTextures();
+    await createTextures();
 
 		const loader = new GLTFLoader();
 
 		loader.load('/tiny-creature/model.glb', async ({ scene: obj }) => {
 			const mesh = obj.getObjectByName('Icosphere');
 			if (!(mesh instanceof THREE.SkinnedMesh)) return;
-
-      await texturePromise;
 
 			creature = obj;
 
