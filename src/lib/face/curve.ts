@@ -11,6 +11,8 @@ export type CurveOptions = {
 
 	x: number;
 	y: number;
+
+	angle: number;
 };
 
 export default class Curve {
@@ -27,7 +29,8 @@ export default class Curve {
 			width: opts?.width ?? 50,
 			curve: opts?.curve ?? 10,
 			x: opts?.x ?? 0,
-			y: opts?.y ?? 0
+			y: opts?.y ?? 0,
+			angle: opts?.angle ?? 0
 		});
 		this.graphics = new PIXI.Graphics();
 		this.color = opts?.color ?? 0x212121;
@@ -42,6 +45,7 @@ export default class Curve {
 		const stroke = this.options.get('stroke');
 		const x = this.options.get('x');
 		const y = this.options.get('y');
+		const angle = this.options.get('angle');
 
 		this.graphics.clear();
 		this.graphics
@@ -53,6 +57,7 @@ export default class Curve {
 				cap: 'round'
 			});
 
+		this.graphics.angle = angle;
 		this.graphics.position.set(x * scale, y * scale);
 	}
 

@@ -19,13 +19,12 @@
 		document.body.appendChild(stats.dom);
 	});
 
-
 	const { renderStage } = useThrelte();
 
 	const afterRenderStage = useStage('after-render', {
 		after: renderStage
 	});
-	
+
 	useTask(() => {
 		stats.begin();
 	});
@@ -42,6 +41,10 @@
 </T.PerspectiveCamera>
 
 <Creature />
+
+<!-- <Creature position={[3, 0, 0]} scale={[1, 0.7, 1]} />
+
+<Creature position={[-3, 0, 0]} scale={[1, 1.3, 1]} /> -->
 
 <Environment isBackground={false} url={'/tiny-creature/workshop.jpg'} />
 

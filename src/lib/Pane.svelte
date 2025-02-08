@@ -1,67 +1,15 @@
 <script lang="ts">
 	import {
-		Checkbox,
 		Pane,
 		Slider,
-		Textarea,
 		Folder,
 		Color,
 		ThemeUtils,
-		Button
 	} from 'svelte-tweakpane-ui';
-	import { eyebrowLeft, eyebrowRight, furMouth, mouth } from './face/face';
-	import { colors } from './state.svelte';
-
-	const options = $state({
-		leftEyebrow: {
-			x: 75 / 2,
-			y: 40,
-			width: 50,
-			curve: 10,
-			stroke: 10
-		},
-		rightEyebrow: {
-			x: -75 / 2,
-			y: 40,
-			width: 50,
-			curve: 10,
-			stroke: 10
-		},
-		mouth: {
-	x: 0,
-	y: -130,
-	stroke: 20,
-	color: 0,
-	width: 100,
-	curve: -40
-}
-	});
+	import { options } from './state.svelte';
 
 	function change() {
-		console.log(eyebrowLeft);
-		eyebrowLeft?.options.set('curve', options.leftEyebrow.curve);
-		eyebrowLeft?.options.set('stroke', options.leftEyebrow.stroke);
-		eyebrowLeft?.options.set('width', options.leftEyebrow.width);
-		eyebrowLeft?.options.set('x', options.leftEyebrow.x);
-		eyebrowLeft?.options.set('y', options.leftEyebrow.y);
-
-		eyebrowRight?.options.set('curve', options.rightEyebrow.curve);
-		eyebrowRight?.options.set('stroke', options.rightEyebrow.stroke);
-		eyebrowRight?.options.set('width', options.rightEyebrow.width);
-		eyebrowRight?.options.set('x', options.rightEyebrow.x);
-		eyebrowRight?.options.set('y', options.rightEyebrow.y);
-
-		mouth?.options.set('curve', options.mouth.curve);
-		mouth?.options.set('stroke', options.mouth.stroke);
-		mouth?.options.set('width', options.mouth.width);
-		mouth?.options.set('x', options.mouth.x);
-		mouth?.options.set('y', options.mouth.y);
-
-		furMouth?.options.set('curve', options.mouth.curve);
-		furMouth?.options.set('stroke', options.mouth.stroke);
-		furMouth?.options.set('width', options.mouth.width);
-		furMouth?.options.set('x', options.mouth.x);
-		furMouth?.options.set('y', options.mouth.y);
+		options.hasChanged = true;
 	}
 </script>
 
@@ -105,6 +53,14 @@
 				max={100}
 				on:change={change}
 			/>
+
+			<Slider
+				label="angle"
+				bind:value={options.leftEyebrow.angle}
+				min={-100}
+				max={100}
+				on:change={change}
+			/>
 		</Folder>
 		<Folder expanded={false} title="Right Eyebrow">
 			<Slider
@@ -142,6 +98,13 @@
 				max={100}
 				on:change={change}
 			/>
+			<Slider
+				label="angle"
+				bind:value={options.rightEyebrow.angle}
+				min={-100}
+				max={100}
+				on:change={change}
+			/>
 		</Folder>
 		<Folder expanded={false} title="Mouth">
 			<Slider
@@ -158,38 +121,14 @@
 				max={120}
 				on:change={change}
 			/>
-			<Slider
-				label="width"
-				bind:value={options.mouth.width}
-				min={1}
-				max={200}
-				on:change={change}
-			/>
-			<Slider
-				label="x"
-				bind:value={options.mouth.x}
-				min={-100}
-				max={100}
-				on:change={change}
-			/>
-			<Slider
-				label="y"
-				bind:value={options.mouth.y}
-				min={-200}
-				max={100}
-				on:change={change}
-			/>
+			<Slider label="width" bind:value={options.mouth.width} min={1} max={200} on:change={change} />
+			<Slider label="x" bind:value={options.mouth.x} min={-100} max={100} on:change={change} />
+			<Slider label="y" bind:value={options.mouth.y} min={-200} max={100} on:change={change} />
 		</Folder>
 
 		<Folder expanded={false} title="Colors">
-			<Color
-				label="Primary"
-				bind:value={colors.primary}
-			/>
-			<Color
-				label="Secondary"
-				bind:value={colors.secondary}
-			/>
+			<Color label="Primary" bind:value={options.colors.primary} on:change={change} />
+			<Color label="Secondary" bind:value={options.colors.secondary} on:change={change} />
 		</Folder>
 
 		<!-- <Button

@@ -59,7 +59,6 @@ export default class Eye {
 	targetY: number = 0;
 
 	constructor(opts: Partial<EyeOptions>) {
-		console.log('Eye', opts);
 		this.container = new PIXI.Container();
 
 		this.eyeContainer = new PIXI.Container();
