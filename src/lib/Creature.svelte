@@ -7,21 +7,16 @@
 	import { createFaceTexture, createFurTexture, updateBackground, updateFace } from './face/face';
 	import { T, useTask, useThrelte } from '@threlte/core';
 	import {
-		add,
 		color,
 		float,
 		Fn,
-		hash,
 		mix,
-		mul,
 		mx_noise_float,
 		normalGeometry,
 		positionGeometry,
 		select,
 		texture,
-		transformedNormalView,
 		uniform,
-		vec2,
 		vec3,
 		vec4
 	} from 'three/tsl';
@@ -42,8 +37,8 @@
 		ySpeed = 5;
 	}
 
-	let primaryColors = [];
-	let secondaryColors = [];
+	let primaryColors: THREE.TSL.ShaderNodeObject<THREE.UniformNode<THREE.Color>>[] = [];
+	let secondaryColors: THREE.TSL.ShaderNodeObject<THREE.UniformNode<THREE.Color>>[] = [];
 
 	onMount(async () => {
 		// add mouse movement
@@ -103,10 +98,7 @@
 
 			let total = 12;
 			for (let i = 0; i < total; i++) {
-				const material = new THREE.MeshStandardNodeMaterial({
-					transparent: true,
-					opacity: 1
-				});
+				const material = new THREE.MeshStandardNodeMaterial();
 
 				// move vertices along normal to make each shell slightly bigger than the last
 				material.positionNode = positionGeometry
@@ -132,6 +124,7 @@
 					// const c = color(0xec4899);
 
 					// how much fur is there
+          // more transparent -> less fur (0 = no fur)
 					const a = t.a;
 
 					// if fur texture is black, use noise color
@@ -227,7 +220,6 @@
 			});
 		}
 	});
-
 </script>
 
 {#if creature}

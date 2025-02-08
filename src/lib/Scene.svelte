@@ -2,18 +2,18 @@
 	import { T, useStage, useTask, useThrelte } from '@threlte/core';
 	import { Environment, OrbitControls } from '@threlte/extras';
 	import { onMount } from 'svelte';
-	import { ACESFilmicToneMapping } from 'three';
+	import { CineonToneMapping } from 'three';
 	import Stats from 'stats.js';
 
 	import Creature from './Creature.svelte';
 
-	const { renderer } = useThrelte();
+	const { renderer, scene } = useThrelte();
 
 	var stats = new Stats();
 
 	onMount(() => {
-		renderer.toneMapping = ACESFilmicToneMapping;
-		renderer.toneMappingExposure = 0.3;
+		renderer.toneMapping = CineonToneMapping;
+		scene.environmentIntensity = 0.2;
 
 		stats.showPanel(0);
 		document.body.appendChild(stats.dom);
@@ -43,6 +43,8 @@
 
 <Creature />
 
-<Environment isBackground={false} url={'/tiny-creature/workshop.hdr'} />
+<Environment isBackground={false} url={'/tiny-creature/workshop.jpg'} />
 
-<T.DirectionalLight position={[0, 10, 10]} intensity={1} />
+<T.DirectionalLight position={[10, 10, 10]} intensity={1} />
+
+<T.DirectionalLight position={[-10, 10, -10]} intensity={0.5} />
