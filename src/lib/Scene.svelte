@@ -11,12 +11,26 @@
 
 	var stats = new Stats();
 
+	let distance = 5;
+
 	onMount(() => {
 		renderer.toneMapping = CineonToneMapping;
 		scene.environmentIntensity = 0.2;
 
+		if (window.innerWidth < 768) {
+			distance = 8;
+		}
+
 		stats.showPanel(0);
 		document.body.appendChild(stats.dom);
+
+		window.addEventListener('resize', () => {
+			if (window.innerWidth < 768) {
+				distance = 8;
+			} else {
+				distance = 5;
+			}
+		});
 	});
 
 	const { renderStage } = useThrelte();
@@ -36,15 +50,11 @@
 	);
 </script>
 
-<T.PerspectiveCamera makeDefault position={[0, 0, 8]}>
+<T.PerspectiveCamera makeDefault position={[0, 0, distance]}>
 	<OrbitControls />
 </T.PerspectiveCamera>
 
 <Creature />
-
-<!-- <Creature position={[3, 0, 0]} scale={[1, 0.7, 1]} />
-
-<Creature position={[-3, 0, 0]} scale={[1, 1.3, 1]} /> -->
 
 <Environment isBackground={false} url={'/tiny-creature/workshop.jpg'} />
 

@@ -1,6 +1,7 @@
-import { Application, Container, Graphics } from 'pixi.js';
+import { Application, Color, Container, Graphics } from 'pixi.js';
 import Eye from './eye';
 import Curve from './curve';
+import { options } from '$lib/state.svelte';
 
 export async function createFace({
 	width = 512,
@@ -23,18 +24,9 @@ export async function createFace({
 	eyebrowRight: Curve;
 	furMouth: Curve;
 }> {
-	const xScale = 0.4 * scale;
+	const xScale = 0.45 * scale;
 	const yScale = 1.5 * scale;
 	const faceApp = new Application();
-
-	const mouthSettings = {
-		x: 0,
-		y: -130,
-		stroke: 20,
-		color: 0,
-		width: 100,
-		curve: -40
-	};
 
 	await faceApp.init({
 		width,
@@ -45,7 +37,7 @@ export async function createFace({
 	const background = new Graphics();
 	background.rect(0, 0, width, height);
 	background.fill({ color: '#be185d' });
-	background.alpha = 0.7;
+	background.alpha = 0.5;
 	faceApp.stage.addChild(background);
 
 	const container = new Container();
@@ -54,22 +46,20 @@ export async function createFace({
 	container.scale.set(xScale, yScale);
 	faceApp.stage.addChild(container);
 
-	const rightEye = new Eye({
-		x: 75,
-		y: 0,
-		size: 50
-	});
+	const rightEye = new Eye(options.rightEye);
 
-	const leftEye = new Eye({
-		x: -75,
-		y: 0,
-		size: 50
-	});
+	const leftEye = new Eye(options.leftEye);
 
 	container.addChild(rightEye.container);
 	container.addChild(leftEye.container);
 
-	const mouth = new Curve(mouthSettings);
+	const mouthColor = new Color(options.mouth.color);
+	const mouth = new Curve({
+		...options.mouth,
+		colorRed: mouthColor.red * 256,
+		colorGreen: mouthColor.green * 256,
+		colorBlue: mouthColor.blue * 256
+	});
 	container.addChild(mouth.graphics);
 
 	const furApp = new Application();
@@ -107,45 +97,20 @@ export async function createFace({
 		furContainer.addChild(circle);
 	}
 
-	const eyeMaskLeft = new Graphics();
-	eyeMaskLeft.circle(0, 0, 50);
-	eyeMaskLeft.x = -75;
-	eyeMaskLeft.y = 0;
-	eyeMaskLeft.blendMode = 'erase';
-	eyeMaskLeft.fill({ color: '#ffffff' });
-	furContainer.addChild(eyeMaskLeft);
+	if (leftEye.furMask && rightEye.furMask) {
+		furContainer.addChild(leftEye.furMask);
+		furContainer.addChild(rightEye.furMask);
+	}
 
-	const eyeMaskRight = new Graphics();
-	eyeMaskRight.circle(0, 0, 50);
-	eyeMaskRight.x = 75;
-	eyeMaskRight.y = 0;
-	eyeMaskRight.blendMode = 'erase';
-	eyeMaskRight.fill({ color: '#ffffff' });
-	furContainer.addChild(eyeMaskRight);
-
-	const eyebrowLeft = new Curve({
-		x: 75,
-		y: 80,
-		width: 100,
-		curve: 20,
-		stroke: 10
-	});
+	const eyebrowLeft = new Curve(options.leftEyebrow);
 	eyebrowLeft.graphics.alpha = 0.5;
 	furContainer.addChild(eyebrowLeft.graphics);
 
-	const eyebrowRight = new Curve({
-		x: -75,
-		y: 80,
-		width: 100,
-		curve: 20,
-		stroke: 10
-	});
+	const eyebrowRight = new Curve(options.rightEyebrow);
 	eyebrowRight.graphics.alpha = 0.5;
 	furContainer.addChild(eyebrowRight.graphics);
 
-	const furMouth = new Curve({
-		...mouthSettings
-	});
+	const furMouth = new Curve(options.mouth);
 
 	furMouth.graphics.blendMode = 'erase';
 	furContainer.addChild(furMouth.graphics);

@@ -1,43 +1,22 @@
-import * as PIXI from "pixi.js";
-import { AnimatedProperty, degreesToRadians } from './math-helper';
+import * as PIXI from 'pixi.js';
+import { AnimatedProperties, AnimatedProperty, degreesToRadians } from './math-helper';
 
 export type EyeOptions = {
-  container: PIXI.Container;
+	x: number;
+	y: number;
 
-  x: number;
-  y: number;
+	sizeX: number;
+	sizeY: number;
 
-  eyeColor: PIXI.ColorSource;
-  pupilColor: PIXI.ColorSource;
-  highlightColor: PIXI.ColorSource;
-
-  size: number;
-
-  eyebrow: Partial<{
-    length: number;
-
-    width: number;
-
-    y: number;
-    x: number;
-
-    curve: number;
-
-    color: PIXI.ColorSource;
-  }>;
-
-  blinkStart: number;
-  blinkTimer: number;
+	pupilSizeX: number;
+	pupilSizeY: number;
 };
 
 export default class Eye {
-	eyeContainer: PIXI.Container;
-
 	container: PIXI.Container;
 
 	base?: PIXI.Graphics;
 	pupil?: PIXI.Graphics;
-	highlight?: PIXI.Sprite;
 
 	mask?: PIXI.Graphics;
 
@@ -53,64 +32,69 @@ export default class Eye {
 	dx: number = 0;
 	dy: number = 0;
 
-	size: number = 1;
-
 	targetX: number = 0;
 	targetY: number = 0;
 
+	options: AnimatedProperties<EyeOptions>;
+
+	furMask?: PIXI.Graphics;
+
 	constructor(opts: Partial<EyeOptions>) {
+		this.options = new AnimatedProperties({
+			x: opts.x ?? 0,
+			y: opts.y ?? 0,
+			sizeX: opts.sizeX ?? 50,
+			sizeY: opts.sizeY ?? 50,
+			pupilSizeX: opts.pupilSizeX ?? (opts.sizeX ?? 50) * 0.5,
+			pupilSizeY: opts.pupilSizeY ?? (opts.sizeY ?? 50) * 0.5
+		});
+
 		this.container = new PIXI.Container();
 
-		this.eyeContainer = new PIXI.Container();
-
-		this.container.position.set(opts.x ?? 0, opts.y ?? 0);
-
-		this.size = opts.size ?? 1;
-
-		if (opts.blinkStart) {
-			this.blinkTimer = opts.blinkStart;
-		}
-		if (opts.blinkTimer) {
-			this.blinkTimer = opts.blinkTimer;
-		}
+		this.container.position.set(this.options.get('x'), this.options.get('y'));
 
 		this._x = new AnimatedProperty();
 		this._y = new AnimatedProperty();
 
-		this.container.addChild(this.eyeContainer);
+		this.base = new PIXI.Graphics();
+		this.container.addChild(this.base);
 
-		if (opts.container) opts.container.addChild(this.container);
+		this.pupil = new PIXI.Graphics();
+		this.container.addChild(this.pupil);
+		this.mask = new PIXI.Graphics();
+		this.container.addChild(this.mask);
+		this.container.mask = this.mask;
 
-		this.base = new PIXI.Graphics()
-			.ellipse(0, 0, this.size, this.size * 0.9)
-			.fill(opts.eyeColor ?? 0xffffff);
-		this.base.alpha = 1;
-		this.eyeContainer.addChild(this.base);
+		this.furMask = new PIXI.Graphics();
+		this.furMask.blendMode = 'erase';
+		this.furMask.x = this.options.get('x');
+		this.furMask.y = this.options.get('y');
 
-		this.pupil = new PIXI.Graphics()
-			.circle(0, 0, this.size * 0.6)
-			.fill(opts.pupilColor ?? 0x000000)
-			.circle(this.size * 0.3, this.size * 0.3, 0.2 * this.size)
+		this.draw();
+	}
+
+	draw() {
+		if (!this.base || !this.pupil || !this.mask || !this.furMask) return;
+		const sizeX = this.options.get('sizeX');
+		const sizeY = this.options.get('sizeY');
+
+		const pupilSizeX = this.options.get('pupilSizeX');
+		const pupilSizeY = this.options.get('pupilSizeY');
+
+		this.mask.clear();
+		this.mask.ellipse(0, 0, sizeX, sizeY).fill(0xffffff);
+
+		this.base.clear();
+		this.base.ellipse(0, 0, sizeX, sizeY).fill(0xffffff);
+
+		this.pupil.clear();
+		this.pupil.ellipse(0, 0, pupilSizeX, pupilSizeY).fill(0x000000);
+		this.pupil
+			.circle(pupilSizeX * 0.5, pupilSizeY * 0.5, 0.2 * sizeX)
 			.fill({ color: 0xffffff, alpha: 0.7 });
-		this.eyeContainer.addChild(this.pupil);
 
-		this.mask = new PIXI.Graphics().ellipse(0, 0, this.size, this.size * 0.9).fill(0xffffff);
-		this.eyeContainer.addChild(this.mask);
-		this.eyeContainer.mask = this.mask;
-
-		const eyebrowWidth = opts?.eyebrow?.width ?? 2;
-		const eyebrowCurve = opts?.eyebrow?.curve ?? 0.2;
-
-		const eyebrow = new PIXI.Graphics()
-			.moveTo((-eyebrowWidth / 2) * this.size, 0)
-			.quadraticCurveTo(0, eyebrowCurve * this.size, (eyebrowWidth / 2) * this.size, 0)
-			.stroke({
-				color: opts.eyebrow?.color ?? 0,
-				width: opts.eyebrow?.width ?? this.size * 0.2
-			});
-		eyebrow.position.set(opts.eyebrow?.x ?? 0, (opts.eyebrow?.y ?? 0.9) * this.size);
-
-		// this.container.addChild(eyebrow);
+		this.furMask.clear();
+		this.furMask.ellipse(0, 0, sizeX, sizeY).fill({ color: '#ffffff' });
 	}
 
 	lookInDirection(direction: number) {
@@ -120,8 +104,8 @@ export default class Eye {
 	}
 
 	lookAt(x: number, y: number) {
-		this._x.set(x * this.size * 0.3);
-		this._y.set(y * this.size * 0.3);
+		this._x.set(x * this.options.get('sizeX') * 0.3);
+		this._y.set(y * this.options.get('sizeY') * 0.3);
 	}
 
 	rotate(angle: number) {
@@ -138,6 +122,14 @@ export default class Eye {
 		const updateY = this._y.update(deltaTime);
 		if (updateX || updateY) {
 			this.pupil?.position.set(this._x.value, this._y.value);
+		}
+
+		if (this.options.update(deltaTime)) {
+			this.container.position.set(this.options.get('x'), this.options.get('y'));
+
+			this.furMask?.position.set(this.options.get('x'), this.options.get('y'));
+
+			this.draw();
 		}
 
 		if (this.mask) {

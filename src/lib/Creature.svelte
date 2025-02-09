@@ -39,7 +39,7 @@
 	let mouse = new THREE.Vector2();
 
 	function jump() {
-		ySpeed = 5;
+		if (rootBone?.position.y <= -1) ySpeed = 5;
 	}
 
 	let primaryColors: THREE.TSL.ShaderNodeObject<THREE.UniformNode<THREE.Color>>[] = [];
@@ -66,7 +66,9 @@
 
 		let total = 12;
 		for (let i = 0; i < total; i++) {
-			const material = new THREE.MeshStandardNodeMaterial();
+			const material = new THREE.MeshStandardNodeMaterial({
+				side: THREE.DoubleSide
+			});
 
 			// move vertices along normal to make each shell slightly bigger than the last
 			material.positionNode = positionGeometry
@@ -166,7 +168,7 @@
 	onMount(async () => {
 		addEventListeners();
 
-    await createTextures();
+		await createTextures();
 
 		const loader = new GLTFLoader();
 
@@ -201,7 +203,7 @@
 			rootBone.position.y = Math.max(rootBone.position.y, -1) + position[1];
 			rootBone.position.z = position[2];
 
-			ySpeed -= 10 * dt;
+			ySpeed -= 20 * dt;
 		}
 
 		if (!face) return;
@@ -217,31 +219,56 @@
 		if (options.hasChanged) {
 			console.log('updating creature');
 
-			face.eyebrowLeft.options.set('curve', options.leftEyebrow.curve);
-			face.eyebrowLeft.options.set('stroke', options.leftEyebrow.stroke);
-			face.eyebrowLeft.options.set('width', options.leftEyebrow.width);
-			face.eyebrowLeft.options.set('x', options.leftEyebrow.x);
-			face.eyebrowLeft.options.set('y', options.leftEyebrow.y);
-			face.eyebrowLeft.options.set('angle', options.leftEyebrow.angle);
+			if (options.currentEmotion) {
+				const emotion: Record<string, any> = options.emotions[options.currentEmotion];
 
-			face.eyebrowRight.options.set('curve', options.rightEyebrow.curve);
-			face.eyebrowRight.options.set('stroke', options.rightEyebrow.stroke);
-			face.eyebrowRight.options.set('width', options.rightEyebrow.width);
-			face.eyebrowRight.options.set('x', options.rightEyebrow.x);
-			face.eyebrowRight.options.set('y', options.rightEyebrow.y);
-			face.eyebrowRight.options.set('angle', options.rightEyebrow.angle);
+				for (const key in emotion) {
+					const option = emotion[key];
 
-			face.mouth.options.set('curve', options.mouth.curve);
-			face.mouth.options.set('stroke', options.mouth.stroke);
-			face.mouth.options.set('width', options.mouth.width);
-			face.mouth.options.set('x', options.mouth.x);
-			face.mouth.options.set('y', options.mouth.y);
+					for (const optionKey in option) {
+						const optionValue = option[optionKey];
 
-			face.furMouth.options.set('curve', options.mouth.curve);
-			face.furMouth.options.set('stroke', options.mouth.stroke);
-			face.furMouth.options.set('width', options.mouth.width);
-			face.furMouth.options.set('x', options.mouth.x);
-			face.furMouth.options.set('y', options.mouth.y);
+						options[key][optionKey] = optionValue;
+					}
+				}
+				options.currentEmotion = '';
+			}
+
+			const colorEyebrowLeft = new THREE.Color(options.leftEyebrow.color);
+			face.eyebrowLeft.options.setMultiple({
+				...options.leftEyebrow,
+				colorRed: colorEyebrowLeft.r * 256,
+				colorGreen: colorEyebrowLeft.g * 256,
+				colorBlue: colorEyebrowLeft.b * 256
+			});
+
+			const colorEyebrowRight = new THREE.Color(options.rightEyebrow.color);
+			face.eyebrowRight.options.setMultiple({
+				...options.rightEyebrow,
+				colorRed: colorEyebrowRight.r * 256,
+				colorGreen: colorEyebrowRight.g * 256,
+				colorBlue: colorEyebrowRight.b * 256
+			});
+
+			const colorMouth = new THREE.Color(options.mouth.color);
+			face.mouth.options.setMultiple({
+				...options.mouth,
+				colorRed: colorMouth.r * 256,
+				colorGreen: colorMouth.g * 256,
+				colorBlue: colorMouth.b * 256
+			});
+
+			face.leftEye.options.setMultiple({
+				...options.leftEye,
+			});
+
+			face.rightEye.options.setMultiple({
+				...options.rightEye,
+			});
+
+			face.furMouth.options.setMultiple({
+				...options.mouth,
+			});
 
 			face.updateBackground(options.colors.primary);
 

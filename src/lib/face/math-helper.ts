@@ -193,6 +193,14 @@ export class AnimatedProperties<T extends Record<string, number>> {
 		this.properties[key].set(value);
 	}
 
+	setMultiple(values: Partial<T>) {
+		for (const key in values) {
+			if (values[key] !== undefined && this.properties[key]) {
+				this.properties[key].set(values[key]);
+			}
+		}
+	}
+
 	// Update all animated values
 	update(dt: number): boolean {
 		let anyUpdated = false;
