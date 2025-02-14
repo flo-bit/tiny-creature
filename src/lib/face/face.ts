@@ -2,6 +2,7 @@ import { Application, Color, Container, Graphics } from 'pixi.js';
 import Eye from './eye';
 import Curve from './curve';
 import { options } from '$lib/state.svelte';
+import Mouth from './mouth';
 
 export async function createFace({
 	width = 512,
@@ -19,10 +20,9 @@ export async function createFace({
 	updateBackground: (color: string, alpha?: number) => void;
 	leftEye: Eye;
 	rightEye: Eye;
-	mouth: Curve;
+	mouth: Mouth;
 	eyebrowLeft: Curve;
 	eyebrowRight: Curve;
-	furMouth: Curve;
 }> {
 	const xScale = 0.45 * scale;
 	const yScale = 1.5 * scale;
@@ -32,6 +32,29 @@ export async function createFace({
 		width,
 		height,
 		background: 'black'
+	});
+
+	// add to dom
+	document.body.appendChild(faceApp.canvas);
+	// set to fixed position
+	faceApp.canvas.style.position = 'fixed';
+	faceApp.canvas.style.top = '0';
+	faceApp.canvas.style.left = '0';
+	faceApp.canvas.style.width = '100%';
+	faceApp.canvas.style.height = '100%';
+
+	faceApp.canvas.style.display = 'none';
+
+	// set y scale of dom to -1
+	faceApp.canvas.style.transform = 'scaleY(-1)';
+
+	// show hide with key c
+	let visible = false;
+	window.addEventListener('keydown', (e) => {
+		if (e.key === 'c') {
+			visible = !visible;
+			faceApp.canvas.style.display = visible ? 'block' : 'none';
+		}
 	});
 
 	const background = new Graphics();
@@ -54,13 +77,13 @@ export async function createFace({
 	container.addChild(leftEye.container);
 
 	const mouthColor = new Color(options.mouth.color);
-	const mouth = new Curve({
+	const mouth = new Mouth({
 		...options.mouth,
 		colorRed: mouthColor.red * 256,
 		colorGreen: mouthColor.green * 256,
 		colorBlue: mouthColor.blue * 256
 	});
-	container.addChild(mouth.graphics);
+	container.addChild(mouth.container);
 
 	const furApp = new Application();
 
@@ -110,10 +133,7 @@ export async function createFace({
 	eyebrowRight.graphics.alpha = 0.5;
 	furContainer.addChild(eyebrowRight.graphics);
 
-	const furMouth = new Curve(options.mouth);
-
-	furMouth.graphics.blendMode = 'erase';
-	furContainer.addChild(furMouth.graphics);
+	furContainer.addChild(mouth.furMask);
 
 	return {
 		faceCanvas: faceApp.canvas,
@@ -127,7 +147,6 @@ export async function createFace({
 			eyebrowRight.update(dt);
 
 			mouth.update(dt);
-			furMouth.update(dt);
 
 			leftEye.update(dt);
 			rightEye.update(dt);
@@ -144,7 +163,6 @@ export async function createFace({
 		rightEye,
 		mouth,
 		eyebrowLeft,
-		eyebrowRight,
-		furMouth
+		eyebrowRight
 	};
 }

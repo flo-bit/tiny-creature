@@ -202,19 +202,76 @@
 		</Folder>
 		<Folder expanded={false} title="Mouth">
 			<Slider
-				label="curve"
-				bind:value={options.mouth.curve}
+				label="lowerLipCx1"
+				bind:value={options.mouth.lowerLipCx1}
 				min={-100}
 				max={100}
 				on:change={change}
 			/>
 			<Slider
-				label="stroke"
-				bind:value={options.mouth.stroke}
+				label="lowerLipCy1"
+				bind:value={options.mouth.lowerLipCy1}
+				min={-100}
+				max={100}
+				on:change={change}
+			/>
+			<Slider
+				label="lowerLipCx2"
+				bind:value={options.mouth.lowerLipCx2}
+				min={-100}
+				max={100}
+				on:change={change}
+			/>
+			<Slider
+				label="lowerLipCy2"
+				bind:value={options.mouth.lowerLipCy2}
+				min={-100}
+				max={100}
+				on:change={change}
+			/>
+			<Slider
+				label="lowerLipStroke"
+				bind:value={options.mouth.lowerLipStroke}
 				min={1}
 				max={200}
 				on:change={change}
 			/>
+			<Slider
+				label="upperLipCx1"
+				bind:value={options.mouth.upperLipCx1}
+				min={-100}
+				max={100}
+				on:change={change}
+			/>
+			<Slider
+				label="upperLipCy1"
+				bind:value={options.mouth.upperLipCy1}
+				min={-100}
+				max={100}
+				on:change={change}
+			/>
+			<Slider
+				label="upperLipCx2"
+				bind:value={options.mouth.upperLipCx2}
+				min={-100}
+				max={100}
+				on:change={change}
+			/>
+			<Slider
+				label="upperLipCy2"
+				bind:value={options.mouth.upperLipCy2}
+				min={-100}
+				max={100}
+				on:change={change}
+			/>
+			<Slider
+				label="upperLipStroke"
+				bind:value={options.mouth.upperLipStroke}
+				min={1}
+				max={200}
+				on:change={change}
+			/>
+			
 			<Slider label="width" bind:value={options.mouth.width} min={1} max={200} on:change={change} />
 			<Slider label="x" bind:value={options.mouth.x} min={-100} max={100} on:change={change} />
 			<Slider label="y" bind:value={options.mouth.y} min={-200} max={100} on:change={change} />

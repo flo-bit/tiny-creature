@@ -48,10 +48,11 @@
 	let face: Awaited<ReturnType<typeof createFace>>;
 
 	async function createTextures() {
+		let s = 1024;
 		face = await createFace({
-			width: 256,
-			height: 256,
-			scale: 0.25
+			width: s,
+			height: s,
+			scale: s / 1024
 		});
 
 		faceTexture = new THREE.CanvasTexture(face.faceCanvas);
@@ -264,10 +265,6 @@
 
 			face.rightEye.options.setMultiple({
 				...options.rightEye,
-			});
-
-			face.furMouth.options.setMultiple({
-				...options.mouth,
 			});
 
 			face.updateBackground(options.colors.primary);
