@@ -29,7 +29,7 @@
 	let faceTexture: THREE.CanvasTexture;
 	let furTexture: THREE.CanvasTexture;
 
-	const { canvas } = useThrelte();
+	const { canvas, scene } = useThrelte();
 
 	let {
 		scale = [1, 1, 1],
@@ -142,6 +142,8 @@
 					velocity: 0.4
 				});
 				wiggleBones.push(wiggleBone);
+
+				mesh.add(wiggleBone.targetHelper);
 			}
 		});
 	}
@@ -179,17 +181,31 @@
 
 			creature = obj;
 
-			mesh.material = new THREE.MeshStandardMaterial({ map: faceTexture });
+			mesh.material = new THREE.MeshStandardMaterial({ map: faceTexture, wireframe: false });
 
 			let fur = createFur(mesh);
 			obj.add(...fur);
 
 			createWiggleBones(mesh);
 		});
+
+		loader.load('/tiny-creature/hat.glb', async ({ scene: obj }) => {
+			obj.scale.set(0.25, 0.25, 0.25);
+			helper = obj;
+			helper.children[0].rotation.z = 0.1;
+			console.log(helper);
+		});
 	});
 
 	let total = 0;
 	let ySpeed = 0;
+
+	let x = $state(0);
+	let y = $state(0);
+	let z = $state(0);
+	let hasTargetStuff = false;
+
+	let helper = $state<THREE.Mesh | null>(null);
 
 	useTask((dt) => {
 		total += dt;
@@ -197,8 +213,69 @@
 			wiggleBone.update();
 		});
 
+		// find most upper bone
+		let upperBone = wiggleBones[0];
+		wiggleBones.forEach((wiggleBone) => {
+			if (wiggleBone.targetHelper.position.y > upperBone.targetHelper.position.y) {
+				upperBone = wiggleBone;
+			}
+		});
+		// find second upper bone
+		let secondUpperBone = wiggleBones[0];
+		wiggleBones.forEach((wiggleBone) => {
+			if (
+				wiggleBone.targetHelper.position.y > secondUpperBone.targetHelper.position.y &&
+				wiggleBone !== upperBone
+			) {
+				secondUpperBone = wiggleBone;
+			}
+		});
+
+		// if (!helper && creature) {
+		// 	helper = new THREE.Mesh(new THREE.BoxGeometry(0.2, 5, 0.2), new THREE.MeshBasicMaterial());
+		// 	helper.position.y = 2.5;
+		// 	creature?.add(helper);
+
+		// 	console.log(helper);
+		// }
+
+		if (upperBone && helper) {
+			if (!helper.parent) {
+				creature?.add(helper);
+			}
+
+			// find connecting bone
+			let connectingBone = upperBone.bone?.parent;
+			let connectingWiggleBone: WiggleBone | null = null;
+			wiggleBones.forEach((wiggleBone) => {
+				if (wiggleBone.bone === connectingBone) {
+					connectingWiggleBone = wiggleBone;
+				}
+			});
+
+			helper.position.x = upperBone.targetHelper.position.x;
+			helper.position.y = upperBone.targetHelper.position.y + 0.1;
+			helper.position.z = upperBone.targetHelper.position.z;
+
+			if (connectingWiggleBone) {
+				// get up vector (connecting bone - upper bone)
+				const newUp = upperBone.targetHelper.position
+					.clone()
+					.sub(secondUpperBone.targetHelper.position);
+
+				const oldUp = new THREE.Vector3(0, 1, 0).applyQuaternion(helper.quaternion);
+				const rotationAxis = new THREE.Vector3().crossVectors(oldUp, newUp).normalize();
+
+				const angle = oldUp.angleTo(newUp);
+
+				const rotationQuat = new THREE.Quaternion().setFromAxisAngle(rotationAxis, angle);
+
+				helper.quaternion.premultiply(rotationQuat);
+			}
+		}
+
 		if (rootBone) {
-			rootBone.position.x = (Math.sin(total * 2) * 0.5 + position[0]);
+			rootBone.position.x = Math.sin(total * 2) * 0.5 + position[0];
 
 			rootBone.position.y += ySpeed * dt;
 			rootBone.position.y = Math.max(rootBone.position.y, -1) + position[1];
@@ -260,11 +337,11 @@
 			});
 
 			face.leftEye.options.setMultiple({
-				...options.leftEye,
+				...options.leftEye
 			});
 
 			face.rightEye.options.setMultiple({
-				...options.rightEye,
+				...options.rightEye
 			});
 
 			face.updateBackground(options.colors.primary);
